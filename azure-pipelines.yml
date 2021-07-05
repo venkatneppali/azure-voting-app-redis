@@ -1,33 +1,18 @@
-# Docker
-- task: Docker@2
-  inputs:
-    command: 'buildAndPush'
-    Dockerfile: '**/Dockerfile'
-# Build a Docker image
-# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
+version: '3'
+services:
+  azure-vote-back:
+    image: mcr.microsoft.com/oss/bitnami/redis:6.0.8
+    container_name: azure-vote-back
+    environment:
+      ALLOW_EMPTY_PASSWORD: "yes"
+    ports:
+        - "80:80"
 
-trigger:
-- master
-
-resources:
-- repo: self
-
-variables:
-  tag: '$(Build.BuildId)'
-
-stages:
-- stage: Build
-  displayName: Build image
-  jobs:
-  - job: Build
-    displayName: Build
-    pool:
-      vmImage: ubuntu-latest
-    steps:
-    - task: Docker@2
-      displayName: Build an image
-      inputs:
-        command: build
-        dockerfile: '$(Build.SourcesDirectory)/azure-vote/Dockerfile'
-        tags: |
-          $(tag)
+  azure-vote-front:
+    build: ./azure-vote
+    image: mcr.microsoft.com/azuredocs/azure-vote-front:v1
+    container_name: azure-vote-front
+    environment:
+      REDIS: azure-vote-back
+    ports:
+        - "80:80"
